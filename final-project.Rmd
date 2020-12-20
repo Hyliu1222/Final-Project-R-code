@@ -1,0 +1,114 @@
+---
+title: "final project"
+author: "Heye Liu"
+date: "12/18/2020"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+#install.packages("survey")
+library(survey)
+library(ggplot2)
+library(tinytex)
+tinytex::install_tinytex()
+```
+
+pie chart: platform, genre, publisher
+
+```{r}
+vgsales <- read.csv("~/Downloads/vgsales.csv")
+vg <- vgsales %>% filter(Rank <= 500)%>% select(Platform, Genre, Publisher, NA_Sales, EU_Sales, JP_Sales, Global_Sales)
+dp <- count(vg, Platform)%>%arrange(desc(n))
+ddp<- ggplot(dp, aes(x="", y=n, fill=Platform))+
+geom_bar(width = 1, stat = "identity")
+pie1 <- ddp + coord_polar("y", start=0)
+pie1
+
+dg <- count(vg, Genre)%>%arrange(desc(n))
+ddg<- ggplot(dg, aes(x="", y=n, fill=Genre))+
+geom_bar(width = 1, stat = "identity")
+pie2 <- ddg + coord_polar("y", start=0)
+pie2
+
+dpu <- count(vg, Publisher)%>%arrange(desc(n))
+pie(dpu$n, labels = dpu$Publisher, main = "Publisher", cex = 0.7)
+
+```
+platform: ps2, x360, ps3 //// ps, wii
+genre: action, shooter, sports //// role-play, plarform
+publisher: nintendo, EA, sony //// activision, ubisoft
+
+
+teritory: NA,EU,JP
+
+
+linear regressions
+```{r}
+vg %>% ggplot(aes(x = JP_Sales, y = Global_Sales)) + geom_point() + geom_smooth(method = "lm", se = FALSE) + theme_minimal() 
+vg %>% ggplot(aes(x = NA_Sales, y = Global_Sales)) + geom_point() + geom_smooth(method = "lm", se = FALSE) + theme_minimal() 
+vg %>% ggplot(aes(x = EU_Sales, y = Global_Sales)) + geom_point() + geom_smooth(method = "lm", se = FALSE) + theme_minimal() 
+model <- lm(Global_Sales ~ JP_Sales + NA_Sales + EU_Sales, data = vg)
+```
+
+multiple regression sampling
+```{r}
+N <- 1000
+n <- length(vg$Global_Sales)
+fpc.srs = rep(N, n)
+
+vg.design <- svydesign(id=~1, data = vg, fpc = fpc.srs)
+
+model <- svyglm(Global_Sales ~ JP_Sales + NA_Sales +
+               EU_Sales + Platform + Genre + Publisher, vg.design)
+summary(model)
+```
+
+```{r}
+set.seed(124)
+
+#platform
+p1 <- ggplot(dp,aes(x=Platform,y=n,fill=Platform)) + geom_bar(stat="identity")+
+ geom_text(aes(label=n),vjust=1.6) +
+ theme(legend.position = "none")
+p1
+
+pp1 <- sample(dp$Platform,replace = TRUE,prob = dp$n,1000)
+ps1 <- as.data.frame(pp1)
+
+p12 <- ggplot(ps1,aes(x=pp1,y=n,fill=pp1)) + geom_bar(stat="identity")+
+ theme(legend.position = "none")
+p12
+
+#genre
+p2 <- ggplot(dg,aes(x=Genre,y=n,fill=Genre)) + geom_bar(stat="identity")+
+ geom_text(aes(label=n),vjust=1.6) +
+ theme(legend.position = "none")
+p2
+
+pp2 <- sample(dg$Genre,replace = TRUE,prob = dg$n,1000)
+ps2 <- as.data.frame(pp2)
+
+p22 <- ggplot(ps2,aes(x=pp2,y=n,fill=pp2)) + geom_bar(stat="identity")+
+ theme(legend.position = "none")
+p22
+
+#publisher
+p3 <- ggplot(dpu,aes(x=Publisher,y=n,fill=Publisher)) + geom_bar(stat="identity")+
+ geom_text(aes(label=n),vjust=1.6) +
+ theme(legend.position = "none")
+p3
+
+pp3 <- sample(dpu$Publisher,replace = TRUE,prob = dpu$n,1000)
+ps3 <- as.data.frame(pp3)
+
+p32 <- ggplot(ps3,aes(x=pp3,y=n,fill=pp3)) + geom_bar(stat="identity")+
+ theme(legend.position = "none")
+p32
+```
+
+
