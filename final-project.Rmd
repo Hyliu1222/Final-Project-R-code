@@ -3,23 +3,22 @@ title: "final project"
 author: "Heye Liu"
 date: "12/18/2020"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
   word_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
-#install.packages("survey")
+install.packages("survey")
 library(survey)
 library(ggplot2)
 library(tinytex)
 tinytex::install_tinytex()
 ```
 
-pie chart: platform, genre, publisher
-
+raw data
 ```{r}
 vgsales <- read.csv("~/Downloads/vgsales.csv")
 vg <- vgsales %>% filter(Rank <= 500)%>% select(Platform, Genre, Publisher, NA_Sales, EU_Sales, JP_Sales, Global_Sales)
@@ -39,12 +38,6 @@ dpu <- count(vg, Publisher)%>%arrange(desc(n))
 pie(dpu$n, labels = dpu$Publisher, main = "Publisher", cex = 0.7)
 
 ```
-platform: ps2, x360, ps3 //// ps, wii
-genre: action, shooter, sports //// role-play, plarform
-publisher: nintendo, EA, sony //// activision, ubisoft
-
-
-teritory: NA,EU,JP
 
 
 linear regressions
@@ -55,7 +48,7 @@ vg %>% ggplot(aes(x = EU_Sales, y = Global_Sales)) + geom_point() + geom_smooth(
 model <- lm(Global_Sales ~ JP_Sales + NA_Sales + EU_Sales, data = vg)
 ```
 
-multiple regression sampling
+multiple regression survey sampling
 ```{r}
 N <- 1000
 n <- length(vg$Global_Sales)
@@ -68,6 +61,7 @@ model <- svyglm(Global_Sales ~ JP_Sales + NA_Sales +
 summary(model)
 ```
 
+Stratified Random Sampling
 ```{r}
 set.seed(124)
 
